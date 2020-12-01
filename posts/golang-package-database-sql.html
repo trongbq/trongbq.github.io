@@ -1,0 +1,490 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+<head>
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZCQ3FQYQJS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'G-ZCQ3FQYQJS');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrongBQ</title>
+    <link rel="stylesheet" href="/static/css/prism.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+
+
+<body>
+    <div id="site" style="max-width: 800px">
+        
+<header>
+    <div class="main">
+        <a href="/">TrongBQ Blog</a>
+    </div>
+    <nav>
+        
+    </nav>
+</header>
+
+        <main>
+            <article class="post-detail">
+                <h3 class="post-title">Go package: database/sql</h3>
+                <div class="post-metadata">
+                    <div class="post-published_at">
+                        <span>2020-08-21</span>
+                    </div>
+                </div>
+                <div id="post-content">
+                    <nav>
+<ul>
+<li><a href="#headline-1">Preparation</a>
+</li>
+<li><a href="#headline-2">Establish a database connection</a>
+</li>
+<li><a href="#headline-3">Working with database </a>
+<ul>
+<li><a href="#headline-4">Query data</a>
+</li>
+<li><a href="#headline-5">Execute SQL query</a>
+</li>
+<li><a href="#headline-6">Statement</a>
+</li>
+<li><a href="#headline-7">Transactions</a>
+</li>
+<li><a href="#headline-8">Miscs</a>
+<ul>
+<li><a href="#headline-9">Refactor scanning rows</a>
+</li>
+<li><a href="#headline-10">Migration</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#headline-11">Ending</a>
+</li>
+</ul>
+</nav>
+<p>
+One of the nice things about Go which I like it very much is that Go has lots of useful built-in packages that help us build software without relying heavily on external packages.
+Talking about building software, database operations consumes large of our time during development. There are several popular packages can help us reducing development time when working with database like <a href="https://github.com/go-gorm/gorm">gorm</a> or <a href="https://github.com/facebook/ent">Facebook ent</a>, but still, working with only built-in database package is enough for most of the cases.</p>
+<p>
+Go has built-in package <code>database/sql</code> which provide a generic interface around SQL database.</p>
+<div id="outline-container-headline-1" class="outline-2">
+<h2 id="headline-1">
+Preparation
+</h2>
+<div id="outline-text-headline-1" class="outline-text-2">
+<p>Bellow is the DDL and model struct that I will use in examples through this post.</p>
+<p>
+DDL (MySQL)</p>
+<div class="src src-sql">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span style="color:#000;font-weight:bold">CREATE</span> <span style="color:#000;font-weight:bold">TABLE</span> <span style="color:#000;font-weight:bold">`</span>users<span style="color:#000;font-weight:bold">`</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>  <span style="color:#000;font-weight:bold">`</span>id<span style="color:#000;font-weight:bold">`</span> <span style="color:#0086b3">int</span>(<span style="color:#099">11</span>) <span style="color:#000;font-weight:bold">NOT</span> <span style="color:#000;font-weight:bold">NULL</span> AUTO_INCREMENT,
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>  <span style="color:#000;font-weight:bold">`</span>name<span style="color:#000;font-weight:bold">`</span> <span style="color:#0086b3">varchar</span>(<span style="color:#099">45</span>) <span style="color:#000;font-weight:bold">NOT</span> <span style="color:#000;font-weight:bold">NULL</span>,
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>  <span style="color:#000;font-weight:bold">`</span>email<span style="color:#000;font-weight:bold">`</span> <span style="color:#0086b3">varchar</span>(<span style="color:#099">45</span>) <span style="color:#000;font-weight:bold">DEFAULT</span> <span style="color:#000;font-weight:bold">NULL</span>,
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>  <span style="color:#000;font-weight:bold">`</span>created_at<span style="color:#000;font-weight:bold">`</span> <span style="color:#000;font-weight:bold">timestamp</span> <span style="color:#000;font-weight:bold">NOT</span> <span style="color:#000;font-weight:bold">NULL</span>,
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span>  <span style="color:#000;font-weight:bold">PRIMARY</span> <span style="color:#000;font-weight:bold">KEY</span> (<span style="color:#000;font-weight:bold">`</span>id<span style="color:#000;font-weight:bold">`</span>),
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span>  <span style="color:#000;font-weight:bold">UNIQUE</span> <span style="color:#000;font-weight:bold">KEY</span> <span style="color:#000;font-weight:bold">`</span>id_UNIQUE<span style="color:#000;font-weight:bold">`</span> (<span style="color:#000;font-weight:bold">`</span>id<span style="color:#000;font-weight:bold">`</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8</span>) ENGINE<span style="color:#000;font-weight:bold">=</span>InnoDB <span style="color:#000;font-weight:bold">DEFAULT</span> CHARSET<span style="color:#000;font-weight:bold">=</span>armscii8</pre>
+</div>
+</div>
+<p>
+Struct type</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#000;font-weight:bold">type</span> user <span style="color:#000;font-weight:bold">struct</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>	id        <span style="color:#458;font-weight:bold">int</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>	name      <span style="color:#458;font-weight:bold">string</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	email     <span style="color:#458;font-weight:bold">string</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	createdAt time.Time
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#000;font-weight:bold">func</span> (u user) <span style="color:#900;font-weight:bold">String</span>() <span style="color:#458;font-weight:bold">string</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>	<span style="color:#000;font-weight:bold">return</span> fmt.<span style="color:#900;font-weight:bold">Sprintf</span>(<span style="color:#d14">&#34;User(id: %v, name: %v, email: %v, created_at: %v)&#34;</span>, u.id, u.name, u.email, u.created_at)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>}
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-headline-2" class="outline-2">
+<h2 id="headline-2">
+Establish a database connection
+</h2>
+<div id="outline-text-headline-2" class="outline-text-2">
+<p>To start, let&#39;s create a <code>sql.DB</code> instance which represents a pool of connections. <code>database/sql</code> package does not include any drivers so in order to use a specific driver, we have to import it ourself. In the example bellow, I use <em>mysql</em> driver from <em>go-sql-driver</em>, when this module is import, it registers itself to <code>database/sql</code>&#39;s driver list.</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#998;font-style:italic">// https://golang.org/src/database/sql/sql.go
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#998;font-style:italic"></span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#998;font-style:italic">// Register makes a database driver available by the provided name.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#998;font-style:italic">// If Register is called twice with the same name or if driver is nil,
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#998;font-style:italic">// it panics.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#998;font-style:italic"></span><span style="color:#000;font-weight:bold">func</span> <span style="color:#900;font-weight:bold">Register</span>(name <span style="color:#458;font-weight:bold">string</span>, driver driver.Driver) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	driversMu.<span style="color:#900;font-weight:bold">Lock</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>	<span style="color:#000;font-weight:bold">defer</span> driversMu.<span style="color:#900;font-weight:bold">Unlock</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>	<span style="color:#000;font-weight:bold">if</span> driver <span style="color:#000;font-weight:bold">==</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>		<span style="color:#0086b3">panic</span>(<span style="color:#d14">&#34;sql: Register driver is nil&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>	<span style="color:#000;font-weight:bold">if</span> _, dup <span style="color:#000;font-weight:bold">:=</span> drivers[name]; dup {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>		<span style="color:#0086b3">panic</span>(<span style="color:#d14">&#34;sql: Register called twice for driver &#34;</span> <span style="color:#000;font-weight:bold">+</span> name)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>	drivers[name] = driver
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#998;font-style:italic">// https://github.com/go-sql-driver/mysql/blob/master/driver.go
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#998;font-style:italic"></span><span style="color:#000;font-weight:bold">func</span> <span style="color:#900;font-weight:bold">init</span>() {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>	sql.<span style="color:#900;font-weight:bold">Register</span>(<span style="color:#d14">&#34;mysql&#34;</span>, <span style="color:#000;font-weight:bold">&amp;</span>MySQLDriver{})
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>}
+</pre>
+</div>
+</div>
+<p>
+The list of the database drivers can be found <a href="https://github.com/golang/go/wiki/SQLDrivers">here.</a></p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#000;font-weight:bold">package</span> main
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#000;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	<span style="color:#d14">&#34;database/sql&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	<span style="color:#d14">&#34;log&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	_ <span style="color:#d14">&#34;github.com/go-sql-driver/mysql&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#000;font-weight:bold">func</span> <span style="color:#900;font-weight:bold">main</span>() {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>	db, err <span style="color:#000;font-weight:bold">:=</span> sql.<span style="color:#900;font-weight:bold">Open</span>(<span style="color:#d14">&#34;mysql&#34;</span>, <span style="color:#d14">&#34;root:@tcp(127.0.0.1:3307)/experiment&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>	<span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>		log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>	<span style="color:#000;font-weight:bold">defer</span> db.<span style="color:#900;font-weight:bold">Close</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>	err = db.<span style="color:#900;font-weight:bold">Ping</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>	<span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>		log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>	log.<span style="color:#900;font-weight:bold">Print</span>(<span style="color:#d14">&#34;Connected&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>}
+</pre>
+</div>
+</div>
+<p>
+Calling <code>Open</code> may not actually create a connection, we can use <code>Ping</code> to establish a connection to verify if the database connection is alive.
+For most of the exported methods in <code>database/sql</code> package, there are two versions: one without <code>context</code> and the other has <code>context</code> in its parameters. If we use the first one, <code>context.Background()</code> will be used under the hood.</p>
+</div>
+</div>
+<div id="outline-container-headline-3" class="outline-2">
+<h2 id="headline-3">
+Working with database 
+</h2>
+<div id="outline-text-headline-3" class="outline-text-2">
+<p>Everytime we call <code>Query</code> or <code>Exec</code> method on <code>*DB</code>, it asks the connection poll for a connection which is active but idle or ask the Driver to create a new connection if there are no connections available in the pool.</p>
+<div id="outline-container-headline-4" class="outline-3">
+<h3 id="headline-4">
+Query data
+</h3>
+<div id="outline-text-headline-4" class="outline-text-3">
+<p>Data from database can be queried by using combination of <code>db.Query</code> and <code>rows.Scan</code> function.</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span>db, err <span style="color:#000;font-weight:bold">:=</span> sql.<span style="color:#900;font-weight:bold">Open</span>(<span style="color:#d14">&#34;mysql&#34;</span>, <span style="color:#d14">&#34;root:@tcp(127.0.0.1:3306)/experiment?parseTime=true&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>log.<span style="color:#900;font-weight:bold">Print</span>(<span style="color:#d14">&#34;Get all users data:&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>rows, err <span style="color:#000;font-weight:bold">:=</span> db.<span style="color:#900;font-weight:bold">Query</span>(<span style="color:#d14">&#34;select * from users&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#000;font-weight:bold">defer</span> rows.<span style="color:#900;font-weight:bold">Close</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#000;font-weight:bold">for</span> rows.<span style="color:#900;font-weight:bold">Next</span>() {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>    <span style="color:#000;font-weight:bold">var</span> u User
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>    err <span style="color:#000;font-weight:bold">:=</span> rows.<span style="color:#900;font-weight:bold">Scan</span>(<span style="color:#000;font-weight:bold">&amp;</span>u.id, <span style="color:#000;font-weight:bold">&amp;</span>u.name, <span style="color:#000;font-weight:bold">&amp;</span>u.email, <span style="color:#000;font-weight:bold">&amp;</span>u.createdAt)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>    <span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>        log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>    }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>    log.<span style="color:#900;font-weight:bold">Println</span>(u)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>}
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-headline-5" class="outline-3">
+<h3 id="headline-5">
+Execute SQL query
+</h3>
+<div id="outline-text-headline-5" class="outline-text-3">
+<p>Sometimes, we need to execute some SQLs that do not return rows value like <code>INSERT</code> or <code>DELETE</code>. In this case, we better use <code>Exec</code> method, which returns a <code>Result</code> struct.</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#998;font-style:italic">// https://golang.org/src/database/sql/sql.go
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#998;font-style:italic">// A Result summarizes an executed SQL command.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#998;font-style:italic"></span><span style="color:#000;font-weight:bold">type</span> Result <span style="color:#000;font-weight:bold">interface</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	<span style="color:#998;font-style:italic">// LastInsertId returns the integer generated by the database
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#998;font-style:italic"></span>	<span style="color:#998;font-style:italic">// in response to a command. Typically this will be from an
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#998;font-style:italic"></span>	<span style="color:#998;font-style:italic">// &#34;auto increment&#34; column when inserting a new row. Not all
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#998;font-style:italic"></span>	<span style="color:#998;font-style:italic">// databases support this feature, and the syntax of such
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#998;font-style:italic"></span>	<span style="color:#998;font-style:italic">// statements varies.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#998;font-style:italic"></span>	<span style="color:#900;font-weight:bold">LastInsertId</span>() (<span style="color:#458;font-weight:bold">int64</span>, <span style="color:#458;font-weight:bold">error</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>	<span style="color:#998;font-style:italic">// RowsAffected returns the number of rows affected by an
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#998;font-style:italic"></span>	<span style="color:#998;font-style:italic">// update, insert, or delete. Not every database or database
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#998;font-style:italic"></span>	<span style="color:#998;font-style:italic">// driver may support this.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#998;font-style:italic"></span>	<span style="color:#900;font-weight:bold">RowsAffected</span>() (<span style="color:#458;font-weight:bold">int64</span>, <span style="color:#458;font-weight:bold">error</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>}
+</pre>
+</div>
+</div>
+<p>
+Usage example</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span>db, err <span style="color:#000;font-weight:bold">:=</span> sql.<span style="color:#900;font-weight:bold">Open</span>(<span style="color:#d14">&#34;mysql&#34;</span>, <span style="color:#d14">&#34;root:@tcp(127.0.0.1:3306)/experiment?parseTime=true&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>r, err <span style="color:#000;font-weight:bold">:=</span> db.<span style="color:#900;font-weight:bold">Exec</span>(<span style="color:#d14">&#34;insert into users(name, email) values(?, ?)&#34;</span>, <span style="color:#d14">&#34;John&#34;</span>, <span style="color:#d14">&#34;john@gmail.com&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>insertId, err <span style="color:#000;font-weight:bold">:=</span> r.<span style="color:#900;font-weight:bold">LastInsertId</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>rowsAffected, err <span style="color:#000;font-weight:bold">:=</span> r.<span style="color:#900;font-weight:bold">RowsAffected</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>log.<span style="color:#900;font-weight:bold">Printf</span>(<span style="color:#d14">&#34;Inserted row id: %v&#34;</span>, insertId)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>log.<span style="color:#900;font-weight:bold">Printf</span>(<span style="color:#d14">&#34;Rows affected: %v&#34;</span>, rowsAffected)
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-headline-6" class="outline-3">
+<h3 id="headline-6">
+Statement
+</h3>
+<div id="outline-text-headline-6" class="outline-text-3">
+<p>Beside using <code>Query</code> and <code>Exec</code> directly, we can also using a prepared statement for later queries or executions. A single prepared statement can be run concurrently.</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span>db, err <span style="color:#000;font-weight:bold">:=</span> sql.<span style="color:#900;font-weight:bold">Open</span>(<span style="color:#d14">&#34;mysql&#34;</span>, <span style="color:#d14">&#34;root:@tcp(127.0.0.1:3306)/experiment?parseTime=true&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>stmt, err <span style="color:#000;font-weight:bold">:=</span> db.<span style="color:#900;font-weight:bold">Prepare</span>(<span style="color:#d14">&#34;insert into users(name, email) values(?, ?)&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>r, err <span style="color:#000;font-weight:bold">:=</span> stmt.<span style="color:#900;font-weight:bold">Exec</span>(<span style="color:#d14">&#34;John&#34;</span>, <span style="color:#d14">&#34;john@gmail.com&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>insertId, err <span style="color:#000;font-weight:bold">:=</span> r.<span style="color:#900;font-weight:bold">LastInsertId</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>rowsAffected, err <span style="color:#000;font-weight:bold">:=</span> r.<span style="color:#900;font-weight:bold">RowsAffected</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>log.<span style="color:#900;font-weight:bold">Printf</span>(<span style="color:#d14">&#34;Inserted row id: %v&#34;</span>, insertId)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>log.<span style="color:#900;font-weight:bold">Printf</span>(<span style="color:#d14">&#34;Rows affected: %v&#34;</span>, rowsAffected)
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-headline-7" class="outline-3">
+<h3 id="headline-7">
+Transactions
+</h3>
+<div id="outline-text-headline-7" class="outline-text-3">
+<p>Go package <code>database/sql</code> has struct <code>Tx</code> which represent a sql transaction, we can start a transaction by calling <code>BeginTx</code> method or just <code>Begin</code> if you decide to use <code>context.Background()</code> and passing no options.
+There are only two options for starting a transaction: <code>Isolation</code> level and <code>ReadOnly</code>.</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span style="color:#998;font-style:italic">// https://golang.org/src/database/sql/sql.go
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span style="color:#998;font-style:italic"></span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span style="color:#998;font-style:italic">// TxOptions holds the transaction options to be used in DB.BeginTx.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span style="color:#998;font-style:italic"></span><span style="color:#000;font-weight:bold">type</span> TxOptions <span style="color:#000;font-weight:bold">struct</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>    <span style="color:#998;font-style:italic">// Isolation is the transaction isolation level.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span style="color:#998;font-style:italic"></span>    <span style="color:#998;font-style:italic">// If zero, the driver or database&#39;s default level is used.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span><span style="color:#998;font-style:italic"></span>    Isolation IsolationLevel
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8</span>    ReadOnly  <span style="color:#458;font-weight:bold">bool</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">9</span>}
+</pre>
+</div>
+</div>
+<p>
+To ensure data integrity, I recommend to use <code>LevelReadCommited</code> for <em>isolation</em> level for most of the cases and seeking for appropriate isolation level when there are some special requirements.</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span>db, err <span style="color:#000;font-weight:bold">:=</span> sql.<span style="color:#900;font-weight:bold">Open</span>(<span style="color:#d14">&#34;mysql&#34;</span>, <span style="color:#d14">&#34;root:@tcp(127.0.0.1:3306)/experiment?parseTime=true&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>db.<span style="color:#900;font-weight:bold">SetConnMaxLifetime</span>(time.Minute <span style="color:#000;font-weight:bold">*</span> <span style="color:#099">3</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>db.<span style="color:#900;font-weight:bold">SetMaxOpenConns</span>(<span style="color:#099">10</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>db.<span style="color:#900;font-weight:bold">SetMaxIdleConns</span>(<span style="color:#099">10</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>txOpt <span style="color:#000;font-weight:bold">:=</span> sql.TxOptions{
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>    Isolation: sql.LevelReadCommitted,
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>    ReadOnly:  <span style="color:#000;font-weight:bold">false</span>,
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>tx, err <span style="color:#000;font-weight:bold">:=</span> db.<span style="color:#900;font-weight:bold">BeginTx</span>(context.<span style="color:#900;font-weight:bold">Background</span>(), <span style="color:#000;font-weight:bold">&amp;</span>txOpt)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#000;font-weight:bold">defer</span> tx.<span style="color:#900;font-weight:bold">Commit</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>rows, err <span style="color:#000;font-weight:bold">:=</span> tx.<span style="color:#900;font-weight:bold">Query</span>(<span style="color:#d14">&#34;select * from users&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>    tx.<span style="color:#900;font-weight:bold">Commit</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>    log.<span style="color:#900;font-weight:bold">Println</span>(<span style="color:#d14">&#34;Commit the transaction since there is nothing to do here.&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>    log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#998;font-style:italic">// Collect all users into list and update their name to be uppercase
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#998;font-style:italic">// Rollback if any of the update fails
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span style="color:#998;font-style:italic"></span><span style="color:#000;font-weight:bold">var</span> users []user
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#000;font-weight:bold">for</span> rows.<span style="color:#900;font-weight:bold">Next</span>() {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>    <span style="color:#000;font-weight:bold">var</span> u user
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>    err <span style="color:#000;font-weight:bold">:=</span> rows.<span style="color:#900;font-weight:bold">Scan</span>(<span style="color:#000;font-weight:bold">&amp;</span>u.id, <span style="color:#000;font-weight:bold">&amp;</span>u.name, <span style="color:#000;font-weight:bold">&amp;</span>u.email, <span style="color:#000;font-weight:bold">&amp;</span>u.createdAt)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>    <span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>        tx.<span style="color:#900;font-weight:bold">Rollback</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>        log.<span style="color:#900;font-weight:bold">Fatalf</span>(<span style="color:#d14">&#34;Rollback due to error: %v&#34;</span>, err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span>    }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>    users = <span style="color:#0086b3">append</span>(users, u)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span>rows.<span style="color:#900;font-weight:bold">Close</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span style="color:#000;font-weight:bold">for</span> _, u <span style="color:#000;font-weight:bold">:=</span> <span style="color:#000;font-weight:bold">range</span> users {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span>    _, err = tx.<span style="color:#900;font-weight:bold">Exec</span>(<span style="color:#d14">&#34;update users set name = ? where id = ?&#34;</span>, strings.<span style="color:#900;font-weight:bold">ToUpper</span>(u.name), u.id)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>    <span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span>        tx.<span style="color:#900;font-weight:bold">Rollback</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span>        log.<span style="color:#900;font-weight:bold">Fatalf</span>(<span style="color:#d14">&#34;Rollback due to error: %v&#34;</span>, err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span>    }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span>}
+</pre>
+</div>
+</div>
+<p>
+One thing to keep in mind is that using transaction can leads to <code>driver: bad connection</code> easily if we do not use it properly. In the example code above, I have to collect all users from query result, then close the <code>rows</code> before start any updating operation. A transaction holds only a connection so because <code>rows</code> owns the current transaction&#39;s connection, we need to release <code>rows</code>&#39;s connection first, return it back to transaction, before doing any other operations.</p>
+</div>
+</div>
+<div id="outline-container-headline-8" class="outline-3">
+<h3 id="headline-8">
+Miscs
+</h3>
+<div id="outline-text-headline-8" class="outline-text-3">
+<div id="outline-container-headline-9" class="outline-4">
+<h4 id="headline-9">
+Refactor scanning rows
+</h4>
+<div id="outline-text-headline-9" class="outline-text-4">
+<p>Read database result from query rows can be repetitive, we can move this logic into dedicate functions with <code>rows.Scan</code> as a parameter.</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span style="color:#000;font-weight:bold">func</span> <span style="color:#900;font-weight:bold">getUserData</span>(scan <span style="color:#000;font-weight:bold">func</span>(dest <span style="color:#000;font-weight:bold">...</span><span style="color:#000;font-weight:bold">interface</span>{}) <span style="color:#458;font-weight:bold">error</span>) (<span style="color:#000;font-weight:bold">*</span>user, <span style="color:#458;font-weight:bold">error</span>) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>    <span style="color:#000;font-weight:bold">var</span> u user
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>    err <span style="color:#000;font-weight:bold">:=</span> <span style="color:#900;font-weight:bold">scan</span>(<span style="color:#000;font-weight:bold">&amp;</span>u.id, <span style="color:#000;font-weight:bold">&amp;</span>u.name, <span style="color:#000;font-weight:bold">&amp;</span>u.email, <span style="color:#000;font-weight:bold">&amp;</span>u.created_at)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>    <span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>        <span style="color:#000;font-weight:bold">return</span> <span style="color:#000;font-weight:bold">nil</span>, err
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span>    }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span>    <span style="color:#000;font-weight:bold">return</span> <span style="color:#000;font-weight:bold">&amp;</span>u, <span style="color:#000;font-weight:bold">nil</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8</span>}
+</pre>
+</div>
+</div>
+<p>We can pass <code>rows.Scan</code> function to <code>getUserData</code> to get <code>user</code> struct instance back</p>
+<div class="src src-go">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span style="color:#000;font-weight:bold">for</span> rows.<span style="color:#900;font-weight:bold">Next</span>() {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>    u, err <span style="color:#000;font-weight:bold">:=</span> <span style="color:#900;font-weight:bold">getUserData</span>(rows.Scan)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>    <span style="color:#000;font-weight:bold">if</span> err <span style="color:#000;font-weight:bold">!=</span> <span style="color:#000;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>            log.<span style="color:#900;font-weight:bold">Fatal</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>    }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span>    log.<span style="color:#900;font-weight:bold">Println</span>(u)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span>}
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-headline-10" class="outline-4">
+<h4 id="headline-10">
+Migration
+</h4>
+<div id="outline-text-headline-10" class="outline-text-4">
+<p>Database migration can be done by using <a href="https://github.com/golang-migrate/migrate">go-migrate</a> tool.
+Migration file can be created by using following command.</p>
+<div class="src src-bash">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>migrate create -ext sql -dir FOLDER_MIGRATION_FILES -seq TITLE</pre>
+</div>
+</div>
+<p>Then run the migration</p>
+<div class="src src-bash">
+<div class="highlight">
+<pre style="background-color:#fff"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>migrate -database YOUR_DATABASE_URL -path PATH_TO_YOUR_MIGRATIONS up</pre>
+</div>
+</div>
+<p>Check the <a href="https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md">Getting Started guide</a> for more details.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-headline-11" class="outline-2">
+<h2 id="headline-11">
+Ending
+</h2>
+<div id="outline-text-headline-11" class="outline-text-2">
+<p>I myself find <code>database/sql</code> simple and powerful enough for my needs. I do not have to spent my precious time study other database ORM libraries, try to understand why it is designed this way or how to perform some magic when working with database, just stick with built-in package is enough.</p>
+<p>
+Life will be much easier.</p>
+</div>
+</div>
+
+                </div>
+            </article>
+        </main>
+		<hr>
+		
+<footer>
+    <div>
+        <span style="vertical-align: middle; text-align: center; padding-top: 2px; display: inline-block;">©</span> 2020 TrongBQ Blog
+    </div>
+    <div>
+        <a href="mailto:trong.buiquoc@gmail.com" target="_blank" rel="noopener noreferrer">Email</a>
+        <a href="https://github.com/trongbq" target="_blank" rel="noopener noreferrer">Github</a>
+        <a href="https://linkedin.com/in/trongbq" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+    </div>
+</footer>
+
+    </div>
+    
+<script src="/static/js/prism.js"></script>
+
+</body>
+
+</html>
