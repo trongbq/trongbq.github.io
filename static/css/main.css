@@ -1,47 +1,47 @@
 @font-face {
-   font-family: 'IBMFlexSerif';
+   font-family: 'IBMPlexSerif';
    src: url('../fonts/IBMPlexSerif-Medium.ttf') format('truetype');
    font-weight: normal;
    font-style: normal;
 }
 @font-face {
-   font-family: 'IBMFlexSerif';
+   font-family: 'IBMPlexSerif';
    src: url('../fonts/IBMPlexSerif-Italic.ttf') format('truetype');
    font-weight: normal;
    font-style: italic;
 }
 @font-face {
-   font-family: 'IBMFlexSerif';
+   font-family: 'IBMPlexSerif';
    src: url('../fonts/IBMPlexSerif-Light.ttf') format('truetype');
    font-weight: 300;
    font-style: normal;
 }
 @font-face {
-   font-family: 'IBMFlexSerif';
+   font-family: 'IBMPlexSerif';
    src: url('../fonts/IBMPlexSerif-Medium.ttf') format('truetype');
    font-weight: bold;
    font-style: normal;
 }
 @font-face {
-   font-family: 'IBMFlexMono';
+   font-family: 'IBMPlexMono';
    src: url('../fonts/IBMPlexMono-Regular.ttf') format('truetype');
    font-weight: normal;
    font-style: normal;
 }
 @font-face {
-   font-family: 'IBMFlexMono';
+   font-family: 'IBMPlexMono';
    src: url('../fonts/IBMPlexMono-Italic.ttf') format('truetype');
    font-weight: normal;
    font-style: italic;
 }
 @font-face {
-   font-family: 'IBMFlexMono';
+   font-family: 'IBMPlexMono';
    src: url('../fonts/IBMPlexMono-Light.ttf') format('truetype');
    font-weight: 300;
    font-style: normal;
 }
 @font-face {
-   font-family: 'IBMFlexMono';
+   font-family: 'IBMPlexMono';
    src: url('../fonts/IBMPlexMono-Medium.ttf') format('truetype');
    font-weight: bold;
    font-style: normal;
@@ -152,7 +152,7 @@ code,
 tt,
 kbd,
 samp {
-    font-family: IBMFlexMono, Arial;
+    font-family: IBMPlexMono, Arial;
 }
 
 pre {
@@ -167,7 +167,7 @@ pre {
     -moz-tab-size: 4;
     tab-size: 4;
     overflow: auto;
-    font-family: IBMFlexMono, Arial;
+    font-family: IBMPlexMono, Arial;
     font-size: .85rem;
     border: 1px solid #e1e4e8;
     border-radius: 6px;
