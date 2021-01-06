@@ -116,10 +116,16 @@ h6 {
     font-size: .85em;
 }
 
-blockquote,
-q {
+blockquote {
     quotes: none;
     margin: 0;
+    color: rgb(158, 161, 163);
+    padding: 0 1em;
+    border-left: 0.25em solid #dfe2e5;
+}
+
+blockquote > p {
+    margin-block-end: 5px;
 }
 
 ::selection {
