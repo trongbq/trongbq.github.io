@@ -1,50 +1,147 @@
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-size: 1rem;
+    font-family: IBMPlexSerif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: IBMPlexSans;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+a {
+    color: #2ecc71;
+    display: inline-block;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #27ae60;
+}
+
+li {
+    list-style-position: inside;
+}
+
+
+/* header */
+
+#container>header {
+    overflow: hidden;
+}
+
+#container>header #branch {
+    display: inline-block;
+    margin: 0;
+    padding: 7px 0;
+}
+
+#container>header #branch a {
+    font-size: 2rem;
+    padding: 7px 0;
+    opacity: 70%;
+}
+
+#container>header #branch a:hover {}
+
+#container>header #navlinks {
+    float: right;
+    margin: 0;
+    padding: 14px 0;
+}
+
+#container>header #navlinks a:hover {}
+
+
+/* main */
+
 @media (min-width:320px) {
     /* smartphones, iPhone, portrait 480x320 phones */
-    body>div {
+    /* body>div {
         width: 100%;
         padding-left: 10px;
         padding-right: 10px;
-    }
+    } */
 }
 
 @media (min-width:481px) {
     /* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
-    body>div {
+    /* body>div {
         width: 100%;
         padding-left: 30px;
         padding-right: 30px;
-    }
+    } */
 }
 
 @media (min-width:641px) {
     /* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
-    body>div {
+    /* body>div {
         width: 100%;
         padding-left: 50px;
         padding-right: 50px;
-    }
+    } */
 }
 
 @media (min-width:961px) {
     /* tablet, landscape iPad, lo-res laptops ands desktops */
-    body>div {
+    /* body>div {
         width: 780%;
         margin: 0 auto;
-    }
+    } */
 }
 
 @media (min-width:1025px) {
     /* big landscape tablets, laptops, and desktops */
-    body>div {
+    /* body>div {
         width: 780px;
         margin: 0 auto;
-    }
+    } */
 }
 
 @media (min-width:1281px) {
     /* hi-res laptops and desktops */
-    body>div {
+    /* body>div {
         width: 780px;
         margin: 0 auto;
-    }
+    } */
+}
+
+
+/* misc */
+
+.hzul {
+    list-style-type: none;
+    overflow: hidden;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+
+.hzul li {
+    float: left;
+    margin: 0;
+    padding: 0;
+    padding-right: 7px;
+}
+
+.hzul li a {
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
 }
