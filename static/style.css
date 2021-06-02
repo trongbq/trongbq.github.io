@@ -75,6 +75,10 @@
     margin-top: 4rem;
 }
 
+.mb4 {
+    margin-bottom: 4rem;
+}
+
 
 /* padding */
 
@@ -159,4 +163,77 @@
 
 .fs8 {
     font-size: 2rem;
+}
+
+
+/* responsive */
+
+@media (min-width:280px) {
+    /* Galaxy Fold 653x280*/
+    .present {
+        width: 90%;
+    }
+    .content {
+        width: 85%;
+    }
+}
+
+@media (min-width:320px) {
+    /* smartphones, iPhone, portrait 480x320 phones */
+    .present {
+        width: 90%;
+    }
+    .content {
+        width: 85%;
+    }
+}
+
+@media (min-width:481px) {
+    /* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
+    .present {
+        width: 85%;
+    }
+    .content {
+        width: 80%;
+    }
+}
+
+@media (min-width:641px) {
+    /* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+    .present {
+        width: 85%;
+    }
+    .content {
+        width: 80%;
+    }
+}
+
+@media (min-width:961px) {
+    /* tablet, landscape iPad, lo-res laptops ands desktops */
+    .present {
+        width: 780px;
+    }
+    .content {
+        width: 680px;
+    }
+}
+
+@media (min-width:1025px) {
+    /* big landscape tablets, laptops, and desktops */
+    .present {
+        width: 780px;
+    }
+    .content {
+        width: 680px;
+    }
+}
+
+@media (min-width:1281px) {
+    /* hi-res laptops and desktops */
+    .present {
+        width: 780px;
+    }
+    .content {
+        width: 680px;
+    }
 }
