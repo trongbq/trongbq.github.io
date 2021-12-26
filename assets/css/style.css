@@ -1,0 +1,239 @@
+.right {
+    float: right;
+}
+
+.left {
+    float: left;
+}
+
+.inline-list {
+    list-style-type: none;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.display-inline {
+    display: inline;
+}
+
+.display-inline-block {
+    display: inline-block;
+}
+
+.present {
+    width: 780px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.content {
+    width: 680px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+
+/* margin */
+
+.m1 {
+    margin: 0.5rem;
+}
+
+.mt1 {
+    margin-top: 0.5rem;
+}
+
+.mr1 {
+    margin-right: 0.5rem;
+}
+
+.mb1 {
+    margin-bottom: 0.5rem;
+}
+
+.ml1 {
+    margin-left: 0.5rem;
+}
+
+.m2 {
+    margin: 1rem;
+}
+
+.m3 {
+    margin: 2rem;
+}
+
+.mt3 {
+    margin-top: 2rem;
+}
+
+.m4 {
+    margin: 4rem;
+}
+
+.mt4 {
+    margin-top: 4rem;
+}
+
+.mb4 {
+    margin-bottom: 4rem;
+}
+
+
+/* padding */
+
+.p1 {
+    padding: .5rem;
+}
+
+.pt1 {
+    padding-top: .5rem;
+}
+
+.pr1 {
+    padding-right: .5rem;
+}
+
+.pb1 {
+    padding-right: .5rem;
+}
+
+.pl1 {
+    padding-left: .5rem;
+}
+
+.p2 {
+    padding: 1rem;
+}
+
+.pt2 {
+    padding-top: 1rem;
+}
+
+.pr2 {
+    padding-right: 1rem;
+}
+
+.pb2 {
+    padding-right: 1rem;
+}
+
+.pl2 {
+    padding-left: 1rem;
+}
+
+.p3 {
+    padding: 2rem;
+}
+
+.p4 {
+    padding: 4rem;
+}
+
+
+/* font */
+
+.fs1 {
+    font-size: .8rem;
+}
+
+.fs2 {
+    font-size: .9rem;
+}
+
+.fs3 {
+    font-size: 1rem;
+}
+
+.fs4 {
+    font-size: 1.1rem;
+}
+
+.fs5 {
+    font-size: 1.2rem;
+}
+
+.fs6 {
+    font-size: 1.5rem;
+}
+
+.fs7 {
+    font-size: 1.75rem;
+}
+
+.fs8 {
+    font-size: 2rem;
+}
+
+
+/* responsive */
+
+@media (min-width:280px) {
+    /* Galaxy Fold 653x280*/
+    .present {
+        width: 90%;
+    }
+    .content {
+        width: 85%;
+    }
+}
+
+@media (min-width:320px) {
+    /* smartphones, iPhone, portrait 480x320 phones */
+    .present {
+        width: 90%;
+    }
+    .content {
+        width: 85%;
+    }
+}
+
+@media (min-width:481px) {
+    /* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
+    .present {
+        width: 85%;
+    }
+    .content {
+        width: 80%;
+    }
+}
+
+@media (min-width:641px) {
+    /* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+    .present {
+        width: 85%;
+    }
+    .content {
+        width: 80%;
+    }
+}
+
+@media (min-width:961px) {
+    /* tablet, landscape iPad, lo-res laptops ands desktops */
+    .present {
+        width: 780px;
+    }
+    .content {
+        width: 680px;
+    }
+}
+
+@media (min-width:1025px) {
+    /* big landscape tablets, laptops, and desktops */
+    .present {
+        width: 780px;
+    }
+    .content {
+        width: 680px;
+    }
+}
+
+@media (min-width:1281px) {
+    /* hi-res laptops and desktops */
+    .present {
+        width: 780px;
+    }
+    .content {
+        width: 680px;
+    }
+}

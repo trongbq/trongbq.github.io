@@ -1,0 +1,118 @@
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-size: 1rem;
+    font-family: IBMPlexMono, Arial, Helvetica, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+a {
+    color: #db4b4b;
+    display: inline-block;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #9b4444;
+}
+
+li {
+    list-style-position: inside;
+}
+
+
+/* header */
+
+#container>header {
+    overflow: hidden;
+}
+
+#container>header #branch {
+    display: inline-block;
+    margin: 0;
+    padding: 7px 0;
+}
+
+#container>header #branch a {
+    font-size: 2rem;
+    padding: 7px 0;
+    opacity: 70%;
+}
+
+#container>header #navlinks {
+    float: right;
+    margin: 0;
+    padding: 14px 0;
+}
+
+
+/* main */
+
+
+/* index page */
+
+#photo {
+    width: 210px;
+    float: left;
+    margin: 0 30px 20px 0;
+}
+
+
+/* responsive */
+
+@media (min-width:280px) {
+    /* Galaxy Fold 653x280*/
+    #photo {
+        width: 100%;
+        float: none;
+    }
+}
+
+@media (min-width:320px) {
+    /* smartphones, iPhone, portrait 480x320 phones */
+    #photo {
+        width: 100%;
+    }
+}
+
+@media (min-width:481px) {
+    /* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
+    #photo {
+        width: 210px;
+        float: left;
+    }
+}
+
+@media (min-width:641px) {
+    /* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+}
+
+@media (min-width:961px) {
+    /* tablet, landscape iPad, lo-res laptops ands desktops */
+}
+
+@media (min-width:1025px) {
+    /* big landscape tablets, laptops, and desktops */
+}
+
+@media (min-width:1281px) {
+    /* hi-res laptops and desktops */
+}

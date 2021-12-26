@@ -1,0 +1,62 @@
+@font-face {
+    font-family: IBMPlexMono;
+    src: url(/assets/fonts/IBMPlexMono-Regular.ttf);
+    font-weight: regular;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: IBMPlexSans;
+    src: url(/assets/fonts/IBMPlexSans-Medium.ttf);
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: IBMPlexSans;
+    src: url(/assets/fonts/IBMPlexSans-Bold.ttf);
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: IBMPlexSerif;
+    src: url(/assets/fonts/IBMPlexSerif-Regular.ttf);
+    font-weight: regular;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: IBMPlexSerif;
+    src: url(/assets/fonts/IBMPlexSerif-Italic.ttf);
+    font-weight: regular;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: IBMPlexSerif;
+    src: url(/assets/fonts/IBMPlexSerif-Light.ttf);
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: IBMPlexSerif;
+    src: url(/assets/fonts/IBMPlexSerif-LightItalic.ttf);
+    font-weight: 300;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: IBMPlexSerif;
+    src: url(/assets/fonts/IBMPlexSerif-Bold.ttf);
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: IBMPlexSerif;
+    src: url(/assets/fonts/IBMPlexSerif-BoldItalic.ttf);
+    font-weight: bold;
+    font-style: italic;
+}
